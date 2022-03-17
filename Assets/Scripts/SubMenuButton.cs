@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class SubMenuButton : MonoBehaviour
 {
+    public string buttonName;
     // Start is called before the first frame update
     void Start()
     {

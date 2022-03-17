@@ -134,7 +134,7 @@ GameObject:
   - component: {fileID: 450750341}
   - component: {fileID: 450750340}
   m_Layer: 0
-  m_Name: Manement Script
+  m_Name: Management Script
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

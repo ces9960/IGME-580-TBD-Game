@@ -9,6 +9,7 @@ public class PlayerUnit : MonoBehaviour
     int level; //this character's level
     public const int LEVEL_CAP = 5; //the maximum level that a character can be
 
+    #region startingStats
     //starting stats by class (currently placeholder values)
     const int HP_START_FIGHTER = 20;
     const int ATK_START_FIGHTER = 10;
@@ -19,7 +20,9 @@ public class PlayerUnit : MonoBehaviour
     const int ATK_START_MAGE = 15;
     const int DEF_START_MAGE = 5;
     const int SPD_START_MAGE = 10;
+    #endregion
 
+    #region statGrowths
     //stat growths per level
     const int HP_GROWTH_FIGHTER = 10;
     const int ATK_GROWTH_FIGHTER = 2;
@@ -30,7 +33,7 @@ public class PlayerUnit : MonoBehaviour
     const int ATK_GROWTH_MAGE = 3;
     const int DEF_GROWTH_MAGE = 1;
     const int SPD_GROWTH_MAGE = 2;
-
+    #endregion
     public enum characterClass { fighter, mage} //enum of character classes (fighter and mage, with the possibility of adding more as a stretch goal)
     public characterClass myClass; //this unit's character class
 
