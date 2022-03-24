@@ -6,8 +6,14 @@ public class PlayerUnit : MonoBehaviour
 {
     int healthCurrent, healthMax; //current and max HP
     int attackStat, defenseStat, speedStat; //stats for attack, defense, and speed
-    int level; //this character's level
+    int level = 1; //this character's level
     public const int LEVEL_CAP = 5; //the maximum level that a character can be
+    const int TURN_THRESHOLD = 100; //when turnCounter reaches this number, this unit takes a turn
+    int turnCounter = 0; //increases at a rate based on the unit's speed
+    bool fighterDefBuff = false; //is the fighter's defense buff skill active?
+    bool movementUsed = false; //has this unit moved?
+    bool actionUsed = false; //has this unit attacked or used an ability?
+    int gridX, gridY; //position on the grid
 
     #region startingStats
     //starting stats by class (currently placeholder values)
@@ -82,6 +88,11 @@ public class PlayerUnit : MonoBehaviour
         switch (myClass) //checks this unit's character class then uses the corresponding ability
         {
             case characterClass.fighter: //currently unimplemented, will be an attack that does bonus damage to the target, but deals a small amount of damage to this unit
+                modifyHealth(-healthMax / 4); //take damage equal to 1/4 of max health
+                if(healthCurrent <= 0)
+                {
+                    healthCurrent = 1;
+                }
                 break;
             case characterClass.mage: //currently unimplemented, will be an attack that deals damage to all enemies within a 3x3 square centered on the target square
                 break;
@@ -95,6 +106,8 @@ public class PlayerUnit : MonoBehaviour
         switch (myClass) //checks this unit's character class then uses the corresponding ability
         {
             case characterClass.fighter: //currently unimplemented, will be an ability that reduces damage taken by this unit until the next turn
+                fighterDefBuff = true;
+                defenseStat *= 2;
                 break;
             case characterClass.mage: //currently unimplemented, will be an attack that deals damage to all enemies within a 3x3 square centered on the target square
                 break;
@@ -105,12 +118,16 @@ public class PlayerUnit : MonoBehaviour
 
     void StartTurn() //everything that happens at the start of the turn
     {
-
+        if (fighterDefBuff)
+        {
+            fighterDefBuff = false;
+            defenseStat /= 2;
+        }
     }
 
     void EndTurn() //everything that happens at the end of the turn
     {
-
+        turnCounter = 0;
     }
 
     public int getLevel() //returns level for other functions (this could also be done with get/set)
@@ -125,6 +142,49 @@ public class PlayerUnit : MonoBehaviour
             level++;//increases level
         }
         //recalculates stats based on character class and new level
-        //stat recalculations go here
+        switch (myClass)
+        {
+            case characterClass.fighter:
+                healthMax += HP_GROWTH_FIGHTER;
+                attackStat += ATK_GROWTH_FIGHTER;
+                defenseStat = DEF_GROWTH_FIGHTER;
+                speedStat = SPD_GROWTH_FIGHTER;
+                break;
+            case characterClass.mage:
+                healthMax += HP_GROWTH_MAGE;
+                attackStat += ATK_GROWTH_MAGE;
+                defenseStat += DEF_GROWTH_MAGE;
+                speedStat = SPD_GROWTH_MAGE;
+                break;
+            default:break;
+        }
+        healthCurrent = healthMax;
+    }
+
+    public void modifyHealth(int amount)
+    {
+        healthCurrent += amount;
+    }
+
+    //methods that return stats (I know get/set works, but I'm doing it the lazy way for now)
+    public int getHealthMax()
+    {
+        return healthMax;
+    }
+    public int getHealthCurrent()
+    {
+        return healthCurrent;
+    }
+    public int getAttack()
+    {
+        return attackStat;
+    }
+    public int getDefense()
+    {
+        return defenseStat;
+    }
+    public int getSpeed()
+    {
+        return speedStat;
     }
 }

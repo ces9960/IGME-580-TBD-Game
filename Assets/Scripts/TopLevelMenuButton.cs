@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class TopLevelMenuButton : MonoBehaviour
 {
-    List<SubMenuButton> menuOptions = new List<SubMenuButton>();
+    public List<SubMenuButton> menuOptions = new List<SubMenuButton>();
     public int menuSize { get { return menuOptions.Count; }}
     public string buttonName;
     // Start is called before the first frame update
