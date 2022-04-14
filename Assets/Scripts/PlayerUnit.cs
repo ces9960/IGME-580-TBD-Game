@@ -4,16 +4,23 @@ using UnityEngine;
 
 public class PlayerUnit : MonoBehaviour
 {
+    public ManagementMenu menu;
+
     int healthCurrent, healthMax; //current and max HP
     int attackStat, defenseStat, speedStat; //stats for attack, defense, and speed
     int level = 1; //this character's level
     public const int LEVEL_CAP = 5; //the maximum level that a character can be
     const int TURN_THRESHOLD = 100; //when turnCounter reaches this number, this unit takes a turn
-    int turnCounter = 0; //increases at a rate based on the unit's speed
+    public int turnCounter = 0; //increases at a rate based on the unit's speed
     bool fighterDefBuff = false; //is the fighter's defense buff skill active?
     bool movementUsed = false; //has this unit moved?
     bool actionUsed = false; //has this unit attacked or used an ability?
-    int gridX, gridY; //position on the grid
+    public int gridX, gridY; //position on the grid
+
+    SpriteRenderer unitSprite;
+
+    public Sprite meleeImage;
+    public Sprite rangedImage;
 
     #region startingStats
     //starting stats by class (currently placeholder values)
@@ -46,6 +53,7 @@ public class PlayerUnit : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        level = 1;
         switch (myClass) // sets starting stats based on class
         {
             case characterClass.fighter:
@@ -64,7 +72,9 @@ public class PlayerUnit : MonoBehaviour
                 break;
             default:
                 break;
+                
         }
+
     }
 
     // Update is called once per frame
@@ -75,49 +85,103 @@ public class PlayerUnit : MonoBehaviour
 
     void UnitMovement()
     {
-
+        
     }
 
-    void AttackAction()
+    void AttackAction(int targetX, int targetY)
     {
-
-    }
-
-    void FirstAbility() //first ability
-    {
-        switch (myClass) //checks this unit's character class then uses the corresponding ability
+        switch (myClass)
         {
-            case characterClass.fighter: //currently unimplemented, will be an attack that does bonus damage to the target, but deals a small amount of damage to this unit
-                modifyHealth(-healthMax / 4); //take damage equal to 1/4 of max health
-                if(healthCurrent <= 0)
+            case characterClass.fighter: //fighters deal full damage with basic attacks but can only attack adjacent squares (including diagonals)
+                if(Mathf.Abs(targetX - gridX) <= 1 && Mathf.Abs(targetX - gridX) <= 1)
                 {
-                    healthCurrent = 1;
+                    if(attackSquare(targetX, targetY, level))//attacks and sets actionUsed to true if the attack hits something
+                    {
+                        actionUsed = true;
+                    }
                 }
                 break;
-            case characterClass.mage: //currently unimplemented, will be an attack that deals damage to all enemies within a 3x3 square centered on the target square
-                break;
-            default:
+            case characterClass.mage: //mages deal half damage with basic attacks but can attack anywhere on screen
+                if(attackSquare(targetX,targetY,Mathf.RoundToInt(level / 2)))//attacks and sets actionUsed to true if the attack hits something
+                {
+                    actionUsed = true;
+                }
                 break;
         }
     }
 
-    void SecondAbility() //second ability
+    bool attackSquare(int targetX, int targetY, int baseDamage)//checks the target square for enemies, deals damage if there are enemies in the square, then returns true if there was an enemy there or false if there wasn't
+    {
+        for(int i = 0; i < menu.enemyList.Count; i++)
+        {
+            if(menu.enemyList[i].GetComponent<Enemy>().gridX == targetX && menu.enemyList[i].GetComponent<Enemy>().gridY == targetY)
+            {
+                menu.enemyList[i].GetComponent<Enemy>().takeDamage(baseDamage * attackStat / menu.enemyList[i].GetComponent<Enemy>().defenseStat);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void FirstAbility(int targetX, int targetY) //first ability
     {
         switch (myClass) //checks this unit's character class then uses the corresponding ability
         {
-            case characterClass.fighter: //currently unimplemented, will be an ability that reduces damage taken by this unit until the next turn
-                fighterDefBuff = true;
-                defenseStat *= 2;
+            case characterClass.fighter: //attacks for double base damage, but takes 1/4 max health as damage
+                if (attackSquare(targetX, targetY, level * 2))
+                {
+                    modifyHealth(-healthMax / 4); //take damage equal to 1/4 of max health (checks if it hits first so that invalid selections don't damage the unit)
+                    if (healthCurrent <= 0)
+                    {
+                        healthCurrent = 1;
+                    }
+                    actionUsed = true;
+                }
                 break;
-            case characterClass.mage: //currently unimplemented, will be an attack that deals damage to all enemies within a 3x3 square centered on the target square
+            case characterClass.mage: //attacks in a 3x3 square centered on (targetX, targetY) for 1/3 base damage to all enemies
+                for(int i = targetX - 1; i <= targetX + 1; i++)
+                {
+                    for(int j = targetY - 1; i <= targetY + 1; i++)
+                    {
+                        attackSquare(targetX, targetY, Mathf.RoundToInt(level / 3));
+                    }
+                }
+                actionUsed = true;
                 break;
             default:
                 break;
         }
     }
 
-    void StartTurn() //everything that happens at the start of the turn
+    void SecondAbility(int targetX, int targetY) //second ability
     {
+        switch (myClass) //checks this unit's character class then uses the corresponding ability
+        {
+            case characterClass.fighter: //doubles defense stat until the start of this unit's next turn
+                fighterDefBuff = true;
+                defenseStat *= 2;
+                actionUsed = true;
+                break;
+            case characterClass.mage: //heals a single unit for half of its max health
+                for(int i = 0; i < menu.playerUnits.Count; i++)
+                {
+                    if(menu.playerUnits[i].GetComponent<PlayerUnit>().gridX == targetX && menu.playerUnits[i].GetComponent<PlayerUnit>().gridY == targetY)
+                    {
+                        modifyHealth(menu.playerUnits[i].GetComponent<PlayerUnit>().getHealthMax / 2);
+                        actionUsed = true;
+                    }
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    public void StartTurn() //everything that happens at the start of the turn
+    {
+        turnCounter -= 100;
+        movementUsed = false;
+        actionUsed = false;
         if (fighterDefBuff)
         {
             fighterDefBuff = false;
@@ -147,14 +211,14 @@ public class PlayerUnit : MonoBehaviour
             case characterClass.fighter:
                 healthMax += HP_GROWTH_FIGHTER;
                 attackStat += ATK_GROWTH_FIGHTER;
-                defenseStat = DEF_GROWTH_FIGHTER;
-                speedStat = SPD_GROWTH_FIGHTER;
+                defenseStat += DEF_GROWTH_FIGHTER;
+                speedStat += SPD_GROWTH_FIGHTER;
                 break;
             case characterClass.mage:
                 healthMax += HP_GROWTH_MAGE;
                 attackStat += ATK_GROWTH_MAGE;
                 defenseStat += DEF_GROWTH_MAGE;
-                speedStat = SPD_GROWTH_MAGE;
+                speedStat += SPD_GROWTH_MAGE;
                 break;
             default:break;
         }
@@ -166,25 +230,50 @@ public class PlayerUnit : MonoBehaviour
         healthCurrent += amount;
     }
 
-    //methods that return stats (I know get/set works, but I'm doing it the lazy way for now)
-    public int getHealthMax()
+    public int getHealthMax
     {
-        return healthMax;
+        get
+        {
+            return healthMax;
+        }
     }
-    public int getHealthCurrent()
+    public int getHealthCurrent
     {
-        return healthCurrent;
+        get
+        {
+            return healthCurrent;
+        }
     }
-    public int getAttack()
-    {
-        return attackStat;
+
+    public int getAttack
+    { 
+        get
+        {
+            return attackStat;
+        } 
     }
-    public int getDefense()
+    public int getDefense
     {
-        return defenseStat;
+        get
+        {
+            return defenseStat;
+        }
     }
-    public int getSpeed()
+    public int getSpeed
+    { 
+        get
+        { 
+            return speedStat;
+        }
+    }
+
+    public void restart()
     {
-        return speedStat;
+        Start();
+    }
+
+    public void setClass(characterClass input)
+    {
+        myClass = input;
     }
 }
