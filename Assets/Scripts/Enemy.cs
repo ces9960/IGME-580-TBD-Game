@@ -43,8 +43,6 @@ public class Enemy : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        //meleeImage = Resources.Load<Sprite>(Application.dataPath + "/Sprites/enemy_fighter.png");
-        //rangedImage = Resources.Load<Sprite>(Application.dataPath + "/Sprites/enemy_archer.png");
 
         healthMax = START_HP + (enemyLevel - 1) * HP_GROWTH;
         attackStat = START_ATK + (enemyLevel - 1) * ATK_GROWTH;
@@ -58,7 +56,7 @@ public class Enemy : MonoBehaviour
         posVector.x = gridX;
         posVector.y = gridY;
         posVector.z = 1;
-        //enemySprite.transform.position = posVector;
+        enemySprite.transform.position = posVector;
     }
 
     public void takeDamage(int amount)

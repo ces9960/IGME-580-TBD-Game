@@ -53,6 +53,7 @@ public class PlayerUnit : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        unitSprite = GetComponent<SpriteRenderer>();
         level = 1;
         switch (myClass) // sets starting stats based on class
         {
@@ -62,6 +63,8 @@ public class PlayerUnit : MonoBehaviour
                 attackStat = ATK_START_FIGHTER;
                 defenseStat = DEF_START_FIGHTER;
                 speedStat = SPD_START_FIGHTER;
+                unitSprite.sprite = meleeImage;
+                gridX = -1;
                 break;
             case characterClass.mage:
                 healthMax = HP_START_MAGE;
@@ -69,8 +72,11 @@ public class PlayerUnit : MonoBehaviour
                 attackStat = ATK_START_MAGE;
                 defenseStat = DEF_START_MAGE;
                 speedStat = SPD_START_MAGE;
+                unitSprite.sprite = rangedImage;
+                gridX = 1;
                 break;
             default:
+                unitSprite.sprite = meleeImage;
                 break;
                 
         }
@@ -80,12 +86,12 @@ public class PlayerUnit : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
+        transform.position = new Vector3(gridX * ManagementMenu.GRID_SIZE + ManagementMenu.offsetX, gridY * ManagementMenu.GRID_SIZE + ManagementMenu.offsetY, ManagementMenu.unitLayer); 
     }
 
     void UnitMovement()
     {
-        
+        //not implemented
     }
 
     void AttackAction(int targetX, int targetY)
@@ -269,11 +275,16 @@ public class PlayerUnit : MonoBehaviour
 
     public void restart()
     {
-        Start();
+        this.Start();
     }
 
     public void setClass(characterClass input)
     {
         myClass = input;
+    }
+
+    public void setHealth(int value)
+    {
+        healthCurrent = value;
     }
 }

@@ -28,7 +28,7 @@ public class mapTile : MonoBehaviour
 
     public void setLayer(int value)
     {
-            tileRenderer.transform.position = new Vector3(tileRenderer.transform.position.x, tileRenderer.transform.position.y, value);
+            transform.position = new Vector3(transform.position.x, transform.position.y, value);
     }
 
     public void tileInit()

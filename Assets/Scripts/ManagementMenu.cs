@@ -14,6 +14,8 @@ public class ManagementMenu : MonoBehaviour
     static int money = 999;//the amount of money the player has to spend on recruiting/upgrading units
     static bool confirmOpen = false;
     int unitCount;
+    public const float GRID_SIZE = 0.6f;
+    public const float offsetX = -1f, offsetY = -1.6f;
 
     //map images as prefabs
     public GameObject plains, river, lake, island;
@@ -22,9 +24,9 @@ public class ManagementMenu : MonoBehaviour
     public GameObject enemyPrefab;
 
     //z positions of map tiles, units, and visual effects (working as layers so that effects are drawn over units, which are drawn over tiles)
-    const int tileLayer = 2;
-    const int unitLayer = 1;
-    const int effectLayer = 0;
+    public const int tileLayer = 2;
+    public const int unitLayer = 1;
+    public const int effectLayer = 0;
 
     //the text that appears when confirming/denying an action
     static string confirmMessage;
@@ -244,14 +246,14 @@ public class ManagementMenu : MonoBehaviour
                                     case 0:
                                         if (unitCount < UNIT_CAP)
                                         {
-                                            AddUnit(playerUnits[unitCount], PlayerUnit.characterClass.fighter);
+                                            AddUnit(Instantiate(playerPrefab), PlayerUnit.characterClass.fighter);
                                             unitCount++;
                                         }
                                         break;
                                     case 1:
                                         if (unitCount < UNIT_CAP)
                                         {
-                                            AddUnit(playerUnits[unitCount], PlayerUnit.characterClass.mage);
+                                            AddUnit(Instantiate(playerPrefab), PlayerUnit.characterClass.mage);
                                             unitCount++;
                                         }
                                         break;
@@ -264,6 +266,12 @@ public class ManagementMenu : MonoBehaviour
                                 break;
                             case 2: //select mission
                                 currentState = gameState.combat; //currently just sets to combat mode
+                                foreach(GameObject unit in playerUnits)//sets all units to active, sets all player units to max health
+                                {
+                                    unit.SetActive(true);
+                                    unit.GetComponent<PlayerUnit>().setHealth(unit.GetComponent<PlayerUnit>().getHealthMax);
+                                }
+                                //add enemies and display
                                 displayMap(missionMaps[CursorPositionSubLevel]);
                                 currentMap = missionMaps[CursorPositionSubLevel];
                                 break;
@@ -408,7 +416,7 @@ public class ManagementMenu : MonoBehaviour
                 }
                 break;
             case gameState.combat:
-                GUI.Box(new Rect(400, 200, 600, 400), "Battle things go here");
+                GUI.Box(new Rect(660, 800, 600, 100), "COMBAT LOG\nWhen a unit does something,\nit gets logged here");
                 for(int i = 0; i < unitCount; i++)
                 {
                     GUI.Box(new Rect(10, 90 * (i + 1), 200, 85), mainOptions[1].menuOptions[i].buttonName);
@@ -447,7 +455,7 @@ public class ManagementMenu : MonoBehaviour
             playerUnits.Add(recruitObj);
             mainOptions[1].AddSubmenuButton();
             unitToRecruit.restart();//This actually just calls Start() so the starting stats are proplerly assigned
-            
+            unitToRecruit.menu = this;
             updateUnits(recruitObj);
             money -= RECRUITMENT_COST;
         }
